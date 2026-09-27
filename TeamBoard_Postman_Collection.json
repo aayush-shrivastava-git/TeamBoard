@@ -1,0 +1,351 @@
+{
+  "info": {
+    "_postman_id": "teamboard-backend-submission",
+    "name": "TeamBoard Backend - Submission",
+    "description": "Required TeamBoard API scenarios.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "username",
+      "value": "acmecorp"
+    },
+    {
+      "key": "password",
+      "value": "securepass123"
+    },
+    {
+      "key": "email",
+      "value": "dev@acmecorp.com"
+    },
+    {
+      "key": "company_name",
+      "value": "Acme Corp"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "admin_access_token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Register - Success",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\",\n  \"company_name\": \"{{company_name}}\",\n  \"email\": \"{{email}}\"\n}"
+        },
+        "url": "{{base_url}}/api/auth/register/"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 201',()=>pm.response.to.have.status(201));",
+              "const j=pm.response.json();",
+              "pm.expect(j.access).to.be.a('string').and.not.empty;",
+              "pm.expect(j.api_key).to.be.a('string').and.not.empty;",
+              "pm.collectionVariables.set('access_token',j.access);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Register - Duplicate Username",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\",\n  \"company_name\": \"{{company_name}}\",\n  \"email\": \"{{email}}\"\n}"
+        },
+        "url": "{{base_url}}/api/auth/register/"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 400',()=>pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Login - Success",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
+        },
+        "url": "{{base_url}}/api/auth/login/"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200',()=>pm.response.to.have.status(200));",
+              "const j=pm.response.json();",
+              "pm.expect(j.access).to.be.a('string').and.not.empty;",
+              "pm.expect(j.company_name).to.be.a('string');",
+              "pm.expect(j.api_key).to.be.a('string').and.not.empty;",
+              "pm.collectionVariables.set('access_token',j.access);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Login - Invalid Credentials",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"definitely-wrong-password\"\n}"
+        },
+        "url": "{{base_url}}/api/auth/login/"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 401',()=>pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - KB Query - Authenticated",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"search\": \"select_related\"\n}"
+        },
+        "url": "{{base_url}}/api/kb/query/"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200',()=>pm.response.to.have.status(200));",
+              "const j=pm.response.json();",
+              "pm.expect(j).to.have.property('results');",
+              "pm.expect(j).to.have.property('count');"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - KB Query - No Token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"search\": \"select_related\"\n}"
+        },
+        "url": "{{base_url}}/api/kb/query/"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 401',()=>pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - KB Query - Blank Search",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"search\": \"   \"\n}"
+        },
+        "url": "{{base_url}}/api/kb/query/"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 400',()=>pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - KB Query - No Matches",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"search\": \"zzzz-no-such-entry-999\"\n}"
+        },
+        "url": "{{base_url}}/api/kb/query/"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200',()=>pm.response.to.have.status(200));",
+              "const j=pm.response.json();",
+              "pm.expect(j.count).to.eql(0);",
+              "pm.expect(j.results).to.be.an('array').that.is.empty;"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Admin Usage - No Token",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/admin/usage-summary/"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 401',()=>pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Admin Usage - Client Token",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": "{{base_url}}/api/admin/usage-summary/"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 403',()=>pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 - Admin Usage - Admin Token",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_access_token}}"
+          }
+        ],
+        "url": "{{base_url}}/api/admin/usage-summary/"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200',()=>pm.response.to.have.status(200));",
+              "const j=pm.response.json();",
+              "pm.expect(j).to.have.property('total_queries');",
+              "pm.expect(j).to.have.property('active_companies');",
+              "pm.expect(j.top_search_terms).to.be.an('array');"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
